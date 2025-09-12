@@ -13,56 +13,92 @@ struct ChatView: View {
     
     var body: some View {
         WithPerceptionTracking {
+            @Perception.Bindable var store = store
+            
             VStack {
-                // 채팅 로그
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 8) {
-                        ForEach(store.messages, id: \.self) { msg in
-                            Text(msg)
-                                .padding(10)
-                                .background(msg.hasPrefix("Me:") ? Color.blue.opacity(0.2) : Color.gray.opacity(0.2))
-                                .cornerRadius(8)
-                                .frame(maxWidth: .infinity, alignment: msg.hasPrefix("Me:") ? .trailing : .leading)
-                        }
-                    }
-                    .padding()
-                }
-                
+                MessageListView(messages: store.messages)
                 Divider()
-                
-                // 입력창 + 버튼
-                HStack {
-                    TextField(
-                        "Type a message...",
-                        text: Binding(
-                            get: { store.currentMessage },
-                            set: { store.send(.updateCurrentMessage($0)) }
-                        )
-                    )
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(!store.isConnected)
-                    
-                    Button("Send") {
-                        store.send(.sendMessage)
-                    }
-                    .disabled(!store.isConnected || store.currentMessage.isEmpty)
-                }
-                .padding()
-                
-                // 연결 버튼
-                if store.isConnected {
-                    Button("Disconnect") {
-                        store.send(.disconnect)
-                    }
-                    .foregroundColor(.red)
-                    .padding(.bottom)
-                } else {
-                    Button("Connect") {
-                        store.send(.connect)
-                    }
-                    .padding(.bottom)
-                }
+                MessageInputView(store: store)
+                ConnectionButtonView(store: store)
             }
         }
     }
 }
+
+struct MessageListView: View {
+    let messages: [String]
+    
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 8) {
+                ForEach(messages, id: \.self) { msg in
+                    Text(msg)
+                        .padding(10)
+                        .background(msg.hasPrefix("Me:") ? Color.blue.opacity(0.2) : Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                        .frame(maxWidth: .infinity, alignment: msg.hasPrefix("Me:") ? .trailing : .leading)
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+struct MessageInputView: View {
+    let store: StoreOf<ChatFeature>
+    @State private var inputText: String = ""
+    
+    var body: some View {
+        WithPerceptionTracking {
+            let isConnected = store.isConnected
+            
+            HStack {
+                TextField(
+                    "Type a message...",
+                    text: $inputText
+                )
+                .textFieldStyle(.roundedBorder)
+                .disabled(!isConnected)
+                .onSubmit {
+                    if !inputText.isEmpty {
+                        store.send(.updateCurrentMessage(inputText))
+                        store.send(.sendMessage)
+                        inputText = ""
+                    }
+                }
+                
+                Button("Send") {
+                    if !inputText.isEmpty {
+                        store.send(.updateCurrentMessage(inputText))
+                        store.send(.sendMessage)
+                        inputText = ""
+                    }
+                }
+                .disabled(!isConnected || inputText.isEmpty)
+            }
+            .padding()
+        }
+    }
+}
+
+struct ConnectionButtonView: View {
+    let store: StoreOf<ChatFeature>
+    
+    var body: some View {
+        WithPerceptionTracking {
+            if store.isConnected {
+                Button("Disconnect") {
+                    store.send(.disconnect)
+                }
+                .foregroundColor(.red)
+                .padding(.bottom)
+            } else {
+                Button("Connect") {
+                    store.send(.connect)
+                }
+                .padding(.bottom)
+            }
+        }
+    }
+}
+
