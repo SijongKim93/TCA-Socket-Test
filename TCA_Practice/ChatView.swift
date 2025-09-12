@@ -9,15 +9,15 @@ import SwiftUI
 import ComposableArchitecture
 
 struct ChatView: View {
-    let store: StoreOf<ChatFeature>
+    var store: StoreOf<ChatFeature>
     
     var body: some View {
-        WithViewStore(store, observe: { $0 }) { viewStore in
+        WithPerceptionTracking {
             VStack {
                 // 채팅 로그
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
-                        ForEach(viewStore.messages, id: \.self) { msg in
+                        ForEach(store.messages, id: \.self) { msg in
                             Text(msg)
                                 .padding(10)
                                 .background(msg.hasPrefix("Me:") ? Color.blue.opacity(0.2) : Color.gray.opacity(0.2))
@@ -35,30 +35,30 @@ struct ChatView: View {
                     TextField(
                         "Type a message...",
                         text: Binding(
-                            get: { viewStore.currentMessage },
-                            set: { viewStore.send(.updateCurrentMessage($0)) }
+                            get: { store.currentMessage },
+                            set: { store.send(.updateCurrentMessage($0)) }
                         )
                     )
                     .textFieldStyle(.roundedBorder)
-                    .disabled(!viewStore.isConnected)
+                    .disabled(!store.isConnected)
                     
                     Button("Send") {
-                        viewStore.send(.sendMessage)
+                        store.send(.sendMessage)
                     }
-                    .disabled(!viewStore.isConnected || viewStore.currentMessage.isEmpty)
+                    .disabled(!store.isConnected || store.currentMessage.isEmpty)
                 }
                 .padding()
                 
                 // 연결 버튼
-                if viewStore.isConnected {
+                if store.isConnected {
                     Button("Disconnect") {
-                        viewStore.send(.disconnect)
+                        store.send(.disconnect)
                     }
                     .foregroundColor(.red)
                     .padding(.bottom)
                 } else {
                     Button("Connect") {
-                        viewStore.send(.connect)
+                        store.send(.connect)
                     }
                     .padding(.bottom)
                 }

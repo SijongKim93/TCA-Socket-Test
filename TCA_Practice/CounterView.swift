@@ -9,7 +9,7 @@ import SwiftUI
 import ComposableArchitecture
 
 struct CounterView: View {
-    let store: StoreOf<CounterFeature>
+    var store: StoreOf<CounterFeature>
     
     var body: some View {
         WithPerceptionTracking {
