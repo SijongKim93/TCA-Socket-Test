@@ -6,12 +6,20 @@
 //
 
 import SwiftUI
+import ComposableArchitecture
 
 @main
-struct TCA_PracticeApp: App {
+struct CounterApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ChatView(
+                store: Store(
+                    initialState: ChatFeature.State(isConnected: false),
+                    reducer: {
+                        ChatFeature()
+                    }
+                )
+            )
         }
     }
 }
