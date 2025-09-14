@@ -12,11 +12,11 @@ import ComposableArchitecture
 struct CounterApp: App {
     var body: some Scene {
         WindowGroup {
-            ChatView(
+            TextChangeView(
                 store: Store(
-                    initialState: ChatFeature.State(isConnected: false),
+                    initialState: TextChangeFeature.State(text: "Hello world"),
                     reducer: {
-                        ChatFeature()
+                        TextChangeFeature()
                     }
                 )
             )
